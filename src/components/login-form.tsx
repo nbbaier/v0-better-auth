@@ -29,7 +29,6 @@ export function LoginForm({ onAuthSuccess }: LoginFormProps) {
 	const [magicLinkSent, setMagicLinkSent] = useState(false);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState("");
-	const [generatedOtp, setGeneratedOtp] = useState("");
 
 	const handleSendOTP = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -37,16 +36,14 @@ export function LoginForm({ onAuthSuccess }: LoginFormProps) {
 		setError("");
 
 		try {
-			const result = await authClient.sendOTP(email, name);
-			if (result.success) {
-				setOtpSent(true);
-				setGeneratedOtp(result.code || "");
-				console.log(
-					`[v0] OTP sent to ${email}. Check console for code: ${result.code}`,
-				);
-			}
+			await authClient.emailOtp.sendVerificationOtp({
+				email,
+				type: "sign-in",
+			});
+			setOtpSent(true);
+			console.log(`OTP sent to ${email}. Check server console for code.`);
 		} catch (error) {
-			console.error("[v0] Failed to send OTP:", error);
+			console.error("Failed to send OTP:", error);
 			setError("Failed to send OTP. Please try again.");
 		} finally {
 			setLoading(false);
@@ -59,14 +56,17 @@ export function LoginForm({ onAuthSuccess }: LoginFormProps) {
 		setError("");
 
 		try {
-			const result = await authClient.verifyOTP(email, otp);
+			const result = await authClient.signIn.emailOtp({
+				email,
+				otp,
+			});
 
-			if (result?.user) {
-				onAuthSuccess(result.user);
-				console.log("[v0] OTP verified successfully");
+			if (result?.data?.user) {
+				onAuthSuccess(result.data.user);
+				console.log("OTP verified successfully");
 			}
 		} catch (error: unknown) {
-			console.error("[v0] Failed to verify OTP:", error);
+			console.error("Failed to verify OTP:", error);
 			setError(
 				error instanceof Error
 					? error.message
@@ -83,15 +83,17 @@ export function LoginForm({ onAuthSuccess }: LoginFormProps) {
 		setError("");
 
 		try {
-			const result = await authClient.sendMagicLink(email, name);
-			if (result.success) {
-				setMagicLinkSent(true);
-				console.log(
-					`[v0] Magic link sent to ${email}. Check console for link.`,
-				);
-			}
+			await authClient.signIn.magicLink({
+				email,
+				name,
+				callbackURL: "/",
+			});
+			setMagicLinkSent(true);
+			console.log(
+				`Magic link sent to ${email}. Check server console for link.`,
+			);
 		} catch (error) {
-			console.error("[v0] Failed to send magic link:", error);
+			console.error("Failed to send magic link:", error);
 			setError("Failed to send magic link. Please try again.");
 		} finally {
 			setLoading(false);
@@ -178,16 +180,11 @@ export function LoginForm({ onAuthSuccess }: LoginFormProps) {
 										<p className="text-sm text-muted-foreground text-center">
 											Code sent to {email}
 										</p>
-										{generatedOtp && (
-											<div className="mt-3 rounded-lg bg-muted p-3 text-center">
-												<p className="text-xs text-muted-foreground mb-1">
-													Your OTP code (for demo):
-												</p>
-												<p className="text-lg font-mono font-semibold tracking-wider">
-													{generatedOtp}
-												</p>
-											</div>
-										)}
+										<div className="mt-3 rounded-lg bg-muted p-3 text-center">
+											<p className="text-xs text-muted-foreground">
+												Check the server console for your OTP code
+											</p>
+										</div>
 									</div>
 									{error && (
 										<p className="text-sm text-destructive text-center">
@@ -209,7 +206,6 @@ export function LoginForm({ onAuthSuccess }: LoginFormProps) {
 											setOtpSent(false);
 											setOtp("");
 											setError("");
-											setGeneratedOtp("");
 										}}
 									>
 										Use different email

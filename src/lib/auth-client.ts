@@ -1,6 +1,6 @@
 // This simulates Better Auth behavior for demo purposes
 
-interface User {
+export interface User {
 	id: string;
 	email: string;
 	name: string;

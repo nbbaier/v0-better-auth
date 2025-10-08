@@ -6,7 +6,8 @@
 	"scripts": {
 		"build": "tsc && vite build",
 		"dev": "vite",
-		"preview": "vite preview"
+		"preview": "vite preview",
+		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
 		"@radix-ui/react-avatar": "latest",
@@ -16,32 +17,18 @@
 		"clsx": "^2.1.1",
 		"date-fns": "latest",
 		"input-otp": "latest",
-		"jiti": "latest",
-		"less": "latest",
-		"lightningcss": "latest",
 		"lucide-react": "^0.454.0",
-		"next": "15.2.4",
-		"path": "latest",
 		"react": "^19",
 		"react-dom": "^19",
-		"sass": "latest",
-		"sass-embedded": "latest",
-		"stylus": "latest",
-		"sugarss": "latest",
 		"tailwind-merge": "^2.5.5",
-		"tailwindcss-animate": "^1.0.7",
-		"terser": "latest",
-		"tsx": "latest",
-		"tw-animate-css": "latest",
-		"yaml": "latest"
+		"tailwindcss-animate": "^1.0.7"
 	},
 	"devDependencies": {
 		"@tailwindcss/vite": "^4.1.14",
-		"@types/node": "^22",
-		"@types/react": "^19",
+		"@types/node": "^24.7.0",
+		"@types/react": "^19.2.2",
 		"@types/react-dom": "^19",
 		"@vitejs/plugin-react": "^4.3.4",
-		"postcss": "^8.5",
 		"tailwindcss": "^4.1.14",
 		"typescript": "^5",
 		"vite": "^6.0.11"

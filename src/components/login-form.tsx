@@ -24,11 +24,13 @@ interface LoginFormProps {
 export function LoginForm({ onAuthSuccess }: LoginFormProps) {
 	const [name, setName] = useState("");
 	const [email, setEmail] = useState("");
+	const [password, setPassword] = useState("");
 	const [otp, setOtp] = useState("");
 	const [otpSent, setOtpSent] = useState(false);
 	const [magicLinkSent, setMagicLinkSent] = useState(false);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState("");
+	const [isSignUp, setIsSignUp] = useState(false);
 
 	const handleSendOTP = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -62,6 +64,11 @@ export function LoginForm({ onAuthSuccess }: LoginFormProps) {
 			});
 
 			if (result?.data?.user) {
+				if (name && name !== result.data.user.name) {
+					await authClient.updateUser({
+						name,
+					});
+				}
 				onAuthSuccess(result.data.user);
 				console.log("OTP verified successfully");
 			}
@@ -100,10 +107,57 @@ export function LoginForm({ onAuthSuccess }: LoginFormProps) {
 		}
 	};
 
+	const handleEmailPasswordAuth = async (e: React.FormEvent) => {
+		e.preventDefault();
+		setLoading(true);
+		setError("");
+
+		try {
+			if (isSignUp) {
+				const result = await authClient.signUp.email({
+					email,
+					password,
+					name,
+					callbackURL: "/",
+				});
+
+				if (result?.data?.user) {
+					onAuthSuccess(result.data.user);
+					console.log("Sign up successful");
+				}
+			} else {
+				const result = await authClient.signIn.email({
+					email,
+					password,
+					callbackURL: "/",
+				});
+
+				if (result?.data?.user) {
+					onAuthSuccess(result.data.user);
+					console.log("Sign in successful");
+				}
+			}
+		} catch (error: unknown) {
+			console.error("Failed to authenticate:", error);
+			setError(
+				error instanceof Error
+					? error.message
+					: isSignUp
+						? "Failed to sign up. Please try again."
+						: "Invalid credentials. Please try again.",
+			);
+		} finally {
+			setLoading(false);
+		}
+	};
+
 	const otpNameId = useId();
 	const otpEmailId = useId();
 	const magicNameId = useId();
 	const magicEmailId = useId();
+	const passwordNameId = useId();
+	const passwordEmailId = useId();
+	const passwordPasswordId = useId();
 
 	return (
 		<div className="flex min-h-screen items-center justify-center p-4">
@@ -115,8 +169,9 @@ export function LoginForm({ onAuthSuccess }: LoginFormProps) {
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
-					<Tabs defaultValue="otp" className="w-full">
-						<TabsList className="grid w-full grid-cols-2">
+					<Tabs defaultValue="password" className="w-full">
+						<TabsList className="grid w-full grid-cols-3">
+							<TabsTrigger value="password">Password</TabsTrigger>
 							<TabsTrigger value="otp">
 								<KeyRound className="mr-2 h-4 w-4" />
 								OTP
@@ -126,6 +181,71 @@ export function LoginForm({ onAuthSuccess }: LoginFormProps) {
 								Magic Link
 							</TabsTrigger>
 						</TabsList>
+
+						<TabsContent value="password" className="space-y-4">
+							<form onSubmit={handleEmailPasswordAuth} className="space-y-4">
+								{isSignUp && (
+									<div className="space-y-2">
+										<Label htmlFor={passwordNameId}>Name</Label>
+										<Input
+											id={passwordNameId}
+											type="text"
+											placeholder="Your name"
+											value={name}
+											onChange={(e) => setName(e.target.value)}
+											required
+										/>
+									</div>
+								)}
+								<div className="space-y-2">
+									<Label htmlFor={passwordEmailId}>Email</Label>
+									<Input
+										id={passwordEmailId}
+										type="email"
+										placeholder="you@example.com"
+										value={email}
+										onChange={(e) => setEmail(e.target.value)}
+										required
+									/>
+								</div>
+								<div className="space-y-2">
+									<Label htmlFor={passwordPasswordId}>Password</Label>
+									<Input
+										id={passwordPasswordId}
+										type="password"
+										placeholder="••••••••"
+										value={password}
+										onChange={(e) => setPassword(e.target.value)}
+										required
+										minLength={8}
+									/>
+								</div>
+								{error && <p className="text-sm text-destructive">{error}</p>}
+								<Button type="submit" className="w-full" disabled={loading}>
+									{loading
+										? isSignUp
+											? "Creating account..."
+											: "Signing in..."
+										: isSignUp
+											? "Sign Up"
+											: "Sign In"}
+								</Button>
+								<Button
+									type="button"
+									variant="ghost"
+									className="w-full"
+									onClick={() => {
+										setIsSignUp(!isSignUp);
+										setError("");
+										setPassword("");
+									}}
+								>
+									{isSignUp
+										? "Already have an account? Sign in"
+										: "Need an account? Sign up"}
+								</Button>
+							</form>
+						</TabsContent>
 
 						<TabsContent value="otp" className="space-y-4">
 							{!otpSent ? (
